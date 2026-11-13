@@ -76,6 +76,11 @@ def main():
     ap.add_argument("--features", default="features/clip_l14")
     ap.add_argument("--source", choices=["embed", "layers"], default="embed")
     ap.add_argument("--layers", default="24", help="1-indexed transformer blocks, e.g. 12,16,20,24")
+    ap.add_argument("--head", choices=["recon", "linear"], default="recon",
+                    help="recon: classify AE residuals (GFRE). linear: linear probe on the raw features (sanity check)")
+    ap.add_argument("--input-norm", choices=["standardize", "l2", "none"], default="standardize")
+    ap.add_argument("--ae-train", choices=["fake", "real", "both"], default="fake",
+                    help="which training images the autoencoder sees (GFRE: fake only)")
     ap.add_argument("--k", type=int, default=256)
     ap.add_argument("--ae-hidden", type=int, default=512)
     ap.add_argument("--cls-hidden", type=int, default=512)
@@ -105,14 +110,20 @@ def main():
     n_src, d = xtr.shape[1], xtr.shape[2]
 
     # Stage 1: autoencoder on fake features only
-    ftr, fva = xtr[ytr == 1], xva[yva == 1]
+    sel = {"fake": lambda y: y == 1, "real": lambda y: y == 0, "both": lambda y: y >= 0}[a.ae_train]
+    ftr, fva = xtr[sel(ytr)], xva[sel(yva)]
     mu, sd = ftr.mean(0, keepdim=True), ftr.std(0, keepdim=True) + 1e-6
-    norm = lambda x: (x - mu) / sd
+    if a.input_norm == "standardize":
+        norm = lambda x: (x - mu) / sd
+    elif a.input_norm == "l2":
+        norm = lambda x: x / x.norm(dim=-1, keepdim=True) * (x.shape[-1] ** 0.5)
+    else:
+        norm = lambda x: x
     ae = MultiAE(n_src, d, a.ae_hidden, a.k).to(dev)
     opt = torch.optim.Adam(ae.parameters(), lr=a.lr)
     best, best_state, bad = float("inf"), None, 0
     t0 = time.time()
-    for ep in range(a.max_epochs):
+    for ep in range(a.max_epochs if a.head == "recon" else 0):
         ae.train()
         for b in batches(len(ftr), a.bs, True, g):
             xb = norm(ftr[b])
@@ -130,7 +141,8 @@ def main():
             bad += 1
             if bad >= a.patience:
                 break
-    ae.load_state_dict(best_state)
+    if best_state is not None:
+        ae.load_state_dict(best_state)
     ae.eval()
 
     @torch.no_grad()
@@ -138,7 +150,7 @@ def main():
         out = []
         for b in batches(len(x), 4096, False):
             xb = norm(x[b].to(dev))
-            out.append((xb - ae(xb)).abs().flatten(1))
+            out.append((xb - ae(xb)).abs().flatten(1) if a.head == "recon" else xb.flatten(1))
         return torch.cat(out)
 
     rtr, rva = residual(xtr), residual(xva)
@@ -146,8 +158,11 @@ def main():
     rn = lambda r: (r - rmu) / rsd
 
     # Stage 2: classifier on residuals
-    clf = nn.Sequential(nn.Linear(rtr.shape[1], a.cls_hidden), nn.GELU(), nn.Dropout(0.1),
-                        nn.Linear(a.cls_hidden, 1)).to(dev)
+    if a.head == "linear":
+        clf = nn.Linear(rtr.shape[1], 1).to(dev)
+    else:
+        clf = nn.Sequential(nn.Linear(rtr.shape[1], a.cls_hidden), nn.GELU(), nn.Dropout(0.1),
+                            nn.Linear(a.cls_hidden, 1)).to(dev)
     opt = torch.optim.Adam(clf.parameters(), lr=a.lr)
     lossf = nn.BCEWithLogitsLoss()
     best, best_state, bad = (-1.0, 0.0), None, 0
@@ -187,7 +202,7 @@ def main():
     log(rd, stage="done", train_seconds=round(train_s, 1),
         head_ms_per_image=round(1000 * (time.time() - t1) / max(n_scored, 1), 4),
         val_acc=best[0], n_sources=n_src)
-    print(f"TRAINED setting={a.setting} source={a.source} layers={layers if a.source == 'layers' else 'embed'} "
+    print(f"TRAINED head={a.head} norm={a.input_norm} ae_train={a.ae_train} k={a.k} setting={a.setting} source={a.source} layers={layers if a.source == 'layers' else 'embed'} "
           f"best_val_acc={best[0]:.4f}")
 
 

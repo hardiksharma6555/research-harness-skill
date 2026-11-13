@@ -86,7 +86,8 @@ def main():
         x = x.cuda(non_blocking=True)
         layers, emb = forward_all(vis, x)
         if not checked:  # the manual forward must match CLIP's own encode_image
-            ref = model.encode_image(x)
+            with torch.no_grad():  # without this the check tracks gradients and uses tens of GB
+                ref = model.encode_image(x)
             err = (emb.float() - ref.float()).abs().max().item()
             if err > 5e-2:
                 sys.exit(f"extract_features: manual forward differs from encode_image (max err {err})")
