@@ -48,7 +48,12 @@ def check_bash(cmd, cfg):
     prot = [p for p in cfg["protected"] if p in cmd]
     if in_project and prot:
         redirect = re.search(r">{1,2}\s*['\"]?[^\s;|&]*(" + "|".join(map(re.escape, prot)) + ")", cmd)
-        if redirect or re.search(WRITE_VERBS, cmd):
+        # a write verb only counts when it shares a command segment with a protected path,
+        # so `rm other_dir; cat runs/x/result.json` is not blocked
+        segments = re.split(r"&&|\|\||[;|\n]", cmd)
+        verb_hit = any(re.search(WRITE_VERBS, s) and any(p in s for p in prot) for s in segments)
+        prot = [p for p in prot if any(p in s and re.search(WRITE_VERBS, s) for s in segments)] or prot
+        if redirect or verb_hit:
             block(f"this command writes to protected harness paths ({', '.join(prot)}). Frozen files, results "
                   "and run evidence change only through harness/freeze.py, frozen/eval.py or a human.")
     if re.search(r"\brm\b", cmd) and any(d in cmd for d in cfg["data_roots"]):

@@ -35,6 +35,8 @@ python harness/status.py
 python harness/gate.py --setting <setting>
 ```
 
+Check an install with `python tests/selftest.py` (harness, synthetic data) and `python3 tests/test_guard.py` (hook).
+
 Then install the guard hook on the machine running Claude Code (see `SKILL.md`).
 
 ## Layout

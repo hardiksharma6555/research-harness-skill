@@ -9,7 +9,7 @@ RD="$ROOT/runs/$ID"
 cd "$ROOT" || exit 1
 export RUN_DIR="$RD"
 start=$(date +%s)
-"$PY" harness/trace.py running "$ID" host="$(hostname)" gpu="${CUDA_VISIBLE_DEVICES:-none}"
+"$PY" harness/trace.py running "$ID" gpu="${CUDA_VISIBLE_DEVICES:-none}"
 bash "$RD/cmd.sh" > "$RD/log.txt" 2>&1
 rc=$?
 if [ "$rc" -eq 0 ] && [ -d "$RD/scores" ]; then

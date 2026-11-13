@@ -1,6 +1,7 @@
 """Shared helpers for the research harness. Standard library only."""
 import hashlib
 import json
+import socket
 import sys
 import time
 from pathlib import Path
@@ -97,7 +98,8 @@ def code_hashes(dirs=("src",)):
 
 
 def trace(event, run_id=None, **kw):
-    append_jsonl(ROOT / "traces.jsonl", {"event": event, "run_id": run_id, **kw})
+    # host is recorded because node clocks can differ, so timestamps from different hosts are not comparable
+    append_jsonl(ROOT / "traces.jsonl", {"event": event, "run_id": run_id, "host": socket.gethostname(), **kw})
 
 
 if __name__ == "__main__":
