@@ -1,0 +1,6 @@
+{
+  "project_markers": ["my_project_dir"],
+  "protected": ["frozen/", "contract.json", "FROZEN.sha256", "results.jsonl", "result.json", "traces.jsonl", "runs/"],
+  "data_roots": ["/data/", "datasets/"],
+  "gpu_scripts": ["train_recon.py", "extract_features.py", "train.py"]
+}

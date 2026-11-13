@@ -1,0 +1,37 @@
+{
+  "project": "<short name>",
+  "claim": "<one sentence with the number it must hit, e.g. 'Method X raises mean ACC over the 18-set benchmark by >= 3.0 points over baseline Y at <= 2x its inference cost.'>",
+  "proof": "<the table or figure that shows it>",
+  "venue": {"name": "<venue>", "abstract_deadline": "YYYY-MM-DD", "paper_deadline": "YYYY-MM-DD"},
+  "protocol": {
+    "source": "<paper(s) whose protocol this copies>",
+    "seed": 0,
+    "threshold": 0.5,
+    "settings": {
+      "<setting>": {"train_split": "frozen/splits/train/<setting>_train.tsv", "val_split": "frozen/splits/train/<setting>_val.tsv", "n_train_per_class": 0, "n_val_per_class": 0}
+    },
+    "test_sets": ["<set_a>", "<set_b>"],
+    "groups": {"<group>": ["<set_a>"]},
+    "metric": "ACC at threshold (overall) and AP per test set; mean over test_sets",
+    "open_questions": ["<anything the source paper leaves unspecified, and the choice made>"]
+  },
+  "gate": {
+    "setting": "<setting>",
+    "metric": "mean_acc",
+    "reference_tag": "<baseline_repro>",
+    "reference_paper_value": {"<setting>": 0.0},
+    "reference_tolerance": 3.0,
+    "candidate_tag": "<method>",
+    "pass_margin": 3.0,
+    "min_improvement": 0.1,
+    "max_variants": 5,
+    "stall_rounds": 2
+  },
+  "done_when": "harness/gate.py prints PASS for every setting in the claim",
+  "compute": {
+    "python": "<absolute path to the env's python on the compute nodes>",
+    "nodes": {"<node>": [0, 1]},
+    "node_env": {},
+    "idle": {"max_util": 10, "min_free_gb": 20}
+  }
+}

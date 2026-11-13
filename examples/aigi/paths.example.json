@@ -1,0 +1,28 @@
+{
+ "genimage_sd14_root": "/data/GenImage/stable_diffusion_v_1_4/imagenet_ai_0419_sdv4",
+ "sd14_fake_pattern": "_sdv4_",
+ "sd14_exclude_pattern": "_sdv5_",
+ "progan_train_root": "/data/CNNDetection/progan_train",
+ "progan_val_root": "/data/CNNDetection/val",
+ "clip_weights": "/data/models/clip/ViT-L-14.pt",
+ "test_sets": {
+  "progan": {"type": "labeled_tree", "root": "/data/CNNDetection/test/progan"},
+  "biggan": {"type": "labeled_tree", "root": "/data/CNNDetection/test/biggan"},
+  "cyclegan": {"type": "labeled_tree", "root": "/data/CNNDetection/test/cyclegan"},
+  "stargan": {"type": "labeled_tree", "root": "/data/CNNDetection/test/stargan"},
+  "stylegan": {"type": "labeled_tree", "root": "/data/CNNDetection/test/stylegan"},
+  "gaugan": {"type": "labeled_tree", "root": "/data/CNNDetection/test/gaugan"},
+  "crn": {"type": "labeled_tree", "root": "/data/CNNDetection/test/crn"},
+  "imle": {"type": "labeled_tree", "root": "/data/CNNDetection/test/imle"},
+  "seeingdark": {"type": "labeled_tree", "root": "/data/CNNDetection/test/seeingdark"},
+  "san": {"type": "labeled_tree", "root": "/data/CNNDetection/test/san"},
+  "deepfake": {"type": "labeled_tree", "root": "/data/CNNDetection/test/deepfake"},
+  "adm": {"type": "genimage_val", "root": "/data/GenImage/ADM/imagenet_ai_0508_adm"},
+  "glide": {"type": "genimage_val", "root": "/data/GenImage/glide/imagenet_glide"},
+  "sd14": {"type": "genimage_val", "root": "/data/GenImage/stable_diffusion_v_1_4/imagenet_ai_0419_sdv4"},
+  "sd15": {"type": "genimage_val", "root": "/data/GenImage/stable_diffusion_v_1_5/imagenet_ai_0424_sdv5"},
+  "vqdm": {"type": "genimage_val", "root": "/data/GenImage/VQDM/imagenet_ai_0419_vqdm"},
+  "midjourney": {"type": "genimage_val", "root": "/data/GenImage/Midjourney/imagenet_midjourney"},
+  "wukong": {"type": "genimage_val", "root": "/data/GenImage/wukong/imagenet_ai_0424_wukong"}
+ }
+}
